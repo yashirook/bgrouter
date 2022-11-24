@@ -1,0 +1,6 @@
+domain: yashirook.github.io
+layout:
+- go.kubebuilder.io/v3
+projectName: bgrouter
+repo: github.com/yashirook/bgrouter
+version: "3"
