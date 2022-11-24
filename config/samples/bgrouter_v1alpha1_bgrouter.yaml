@@ -1,0 +1,12 @@
+apiVersion: bgrouter.yashirook.github.io/v1alpha1
+kind: BGRouter
+metadata:
+  labels:
+    app.kubernetes.io/name: bgrouter
+    app.kubernetes.io/instance: bgrouter-sample
+    app.kubernetes.io/part-of: bgrouter
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: bgrouter
+  name: bgrouter-sample
+spec:
+  # TODO(user): Add fields here

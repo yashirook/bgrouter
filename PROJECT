@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: bgrouter
 repo: github.com/yashirook/bgrouter
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: yashirook.github.io
+  group: bgrouter
+  kind: BGRouter
+  path: github.com/yashirook/bgrouter/api/v1alpha1
+  version: v1alpha1
 version: "3"
