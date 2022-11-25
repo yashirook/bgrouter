@@ -20,26 +20,75 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
+type VirtualServiceConfig struct {
+	// Name is the name for VirtualService managed by bgrouter controller.
+	// +kubebuilder:validation:Required
+	Name string `json:"name,omitempty"`
+
+	// TargetServiceName is the FQDN for accessing target Service resource.
+	// If you wanna access the service named "foo-service" in "foo" namespace,
+	// you specifies "foo-service.foo.svc.cluster.local".
+	// +kubebuilder:validation:Required
+	TargetServiceName string `json:"targetServiceName,omitempty"`
+
+	// HostsForInternalTraffic is list of hosts for in-cluster traffic.
+	// +kubebuilder:validation:Required
+	HostsForInClusterTraffic []string `json:"hostsForInClusterTraffic,omitempty"`
+
+	// HostsForOutsideClusterTraffic is list of hosts for outside cluster
+	// +optional
+	HostsForOutsideClusterTraffic []string `json:"hostsForOutsideClusterTraffic,omitempty"`
+}
 
 // BGRouterSpec defines the desired state of BGRouter
 type BGRouterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// ActiveColor specifies the color label (blue or green) assigned to the pods to
+	// witch you want to direct traffic.
+	// +kubebuilder:validation:Required
+	// +kubebuilder:validation:Enum=blue;green
+	ActiveColor string `json:"activeColor,omitempty"`
 
-	// Foo is an example field of BGRouter. Edit bgrouter_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// ActiveReplicas is the number of pods with active color labels.
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	ActiveReplicas int32 `json:"activeReplicas,omitempty"`
+
+	// IdleReplicas is the number of pods with idle color labels.
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=0
+	// +optional
+	IdleReplicas int32 `json:"idleReplicas,omitempty"`
+
+	// HpaBaseName is suffix using for name of hpa resource managed by bgrouter controller.
+	// +optional
+	HpaBaseName string `json:"hpaBaseName,omitempty"`
+
+	// DeploymentBaseName is suffix using for name of deployment.
+	// Deployment name have to be ${DeploymentBaseName}-blue or ${DeploymentBaseName}-green format.
+	// +kubebuilder:validation:Required
+	DeploymentBaseName string `json:"deploymentBaseName,omitempty"`
+
+	// VirtualServiceConfig is set of information for building VirtualService resource.
+	// +kubebuilder:validation:Required
+	VirtualServiceConfig VirtualServiceConfig `json:"virtualServiceConfig,omitempty"`
 }
 
 // BGRouterStatus defines the observed state of BGRouter
 type BGRouterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// CurrentActiveColor represent for current active color.
+	// +kubebuilder:validation:Enum=blue;green
+	CurrentActiveColor string `json:"currentActiveColor,omitempty"`
+
+	// Progress describe the progress of swithing operation.
+	// +kubebuilder:validation:Enum=DONE;ONGOING
+	Progress string `json:"progress,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="DESIRED_ACTIVE_COLOR",type="string",JSONPath=".spec.activeColor"
+//+kubebuilder:printcolumn:name="PROGRESS",type="string",JSONPath=".status.progress"
 
 // BGRouter is the Schema for the bgrouters API
 type BGRouter struct {

@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - bgrouter.yashirook.github.io
+  resources:
+  - bgrouters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - bgrouter.yashirook.github.io
+  resources:
+  - bgrouters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - bgrouter.yashirook.github.io
+  resources:
+  - bgrouters/status
+  verbs:
+  - get
+  - patch
+  - update

@@ -1,0 +1,121 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: bgrouters.bgrouter.yashirook.github.io
+spec:
+  group: bgrouter.yashirook.github.io
+  names:
+    kind: BGRouter
+    listKind: BGRouterList
+    plural: bgrouters
+    singular: bgrouter
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.activeColor
+      name: DESIRED_ACTIVE_COLOR
+      type: string
+    - jsonPath: .status.progress
+      name: PROGRESS
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: BGRouter is the Schema for the bgrouters API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: BGRouterSpec defines the desired state of BGRouter
+            properties:
+              activeColor:
+                description: ActiveColor specifies the color label (blue or green)
+                  assigned to the pods to witch you want to direct traffic.
+                enum:
+                - blue
+                - green
+                type: string
+              activeReplicas:
+                default: 1
+                description: ActiveReplicas is the number of pods with active color
+                  labels.
+                format: int32
+                minimum: 0
+                type: integer
+              deploymentBaseName:
+                description: DeploymentBaseName is suffix using for name of deployment.
+                  Deployment name have to be ${DeploymentBaseName}-blue or ${DeploymentBaseName}-green
+                  format.
+                type: string
+              hpaBaseName:
+                description: HpaBaseName is suffix using for name of hpa resource
+                  managed by bgrouter controller.
+                type: string
+              idleReplicas:
+                default: 1
+                description: IdleReplicas is the number of pods with idle color labels.
+                format: int32
+                minimum: 0
+                type: integer
+              virtualServiceConfig:
+                description: VirtualServiceConfig is set of information for building
+                  VirtualService resource.
+                properties:
+                  hostsForInClusterTraffic:
+                    description: HostsForInternalTraffic is list of hosts for in-cluster
+                      traffic.
+                    items:
+                      type: string
+                    type: array
+                  hostsForOutsideClusterTraffic:
+                    description: HostsForOutsideClusterTraffic is list of hosts for
+                      outside cluster
+                    items:
+                      type: string
+                    type: array
+                  name:
+                    description: Name is the name for VirtualService managed by bgrouter
+                      controller.
+                    type: string
+                  targetServiceName:
+                    description: TargetServiceName is the FQDN for accessing target
+                      Service resource. If you wanna access the service named "foo-service"
+                      in "foo" namespace, you specifies "foo-service.foo.svc.cluster.local".
+                    type: string
+                type: object
+            type: object
+          status:
+            description: BGRouterStatus defines the observed state of BGRouter
+            properties:
+              currentActiveColor:
+                description: CurrentActiveColor represent for current active color.
+                enum:
+                - blue
+                - green
+                type: string
+              progress:
+                description: Progress describe the progress of swithing operation.
+                enum:
+                - DONE
+                - ONGOING
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
