@@ -19,23 +19,31 @@ package controllers
 import (
 	"context"
 
+	autoscalingv1 "k8s.io/api/autoscaling/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/log"
+	logr "sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	bgrouterv1alpha1 "github.com/yashirook/bgrouter/api/v1alpha1"
+	bgrouter "github.com/yashirook/bgrouter/api/v1alpha1"
 )
 
 // BGRouterReconciler reconciles a BGRouter object
 type BGRouterReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme    *runtime.Scheme
+	Recourder record.EventRecorder
 }
+
+var log = logr.Log.WithName("controller_bgrouter")
 
 //+kubebuilder:rbac:groups=bgrouter.yashirook.github.io,resources=bgrouters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=bgrouter.yashirook.github.io,resources=bgrouters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=bgrouter.yashirook.github.io,resources=bgrouters/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch
+//+kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=*
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -47,9 +55,18 @@ type BGRouterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *BGRouterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := logr.FromContext(ctx, "namespace", req.Namespace, "name", req.Name)
+	log.Info("Reconciling BGRouter")
 
+	bgrouter := &bgrouter.BGRouter{}
+	if err := r.Get(ctx, req.NamespacedName, bgrouter); err != nil {
+		return reconcile.Result{}, client.IgnoreNotFound(err)
+	}
 	// TODO(user): your logic here
+
+	if err := r.reconcileHPA(ctx, bgrouter); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
@@ -57,6 +74,7 @@ func (r *BGRouterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 // SetupWithManager sets up the controller with the Manager.
 func (r *BGRouterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&bgrouterv1alpha1.BGRouter{}).
+		For(&bgrouter.BGRouter{}).
+		Owns(&autoscalingv1.HorizontalPodAutoscaler{}).
 		Complete(r)
 }

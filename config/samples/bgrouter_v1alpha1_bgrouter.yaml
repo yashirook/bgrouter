@@ -9,4 +9,11 @@ metadata:
     app.kubernetes.io/created-by: bgrouter
   name: bgrouter-sample
 spec:
-  # TODO(user): Add fields here
+  activeColor: blue
+  activeReplicas: 4
+  deploymentBaseName: nginx
+  virtualServiceConfig:
+    name: test-vs
+    targetServiceName: nginx-svc
+    hostsForInClusterTraffic:
+      - 'nginx-svc.bgr-test.svc.cluster.local'
